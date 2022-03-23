@@ -71,7 +71,9 @@
        COPY EPSMTCOM.
 
        PROCEDURE DIVISION USING DFHCOMMAREA.
+
            DISPLAY 'JENKINS WEBHOOK TESTING'.
+
        EPSCMORT-MAINLINE.
       * Call procedure to do SQL call
            PERFORM A805-DUMMY-SQL-CALL
