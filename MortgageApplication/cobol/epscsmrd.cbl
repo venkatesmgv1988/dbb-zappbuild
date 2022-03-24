@@ -140,6 +140,8 @@
            USAGE DISPLAY
            .
        PROCEDURE DIVISION.
+
+           DISPLAY 'TESTING WEBHOOK AND IMPACT BUILD'.
        MAINLINE SECTION.
       * -------------------------------------------------------------
       *            Initialize Storage and Browse Channel
