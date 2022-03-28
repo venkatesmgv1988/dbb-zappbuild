@@ -72,7 +72,7 @@
 
        PROCEDURE DIVISION USING DFHCOMMAREA.
 
-           DISPLAY 'JENKINS WEBHOOK TESTING4'.
+           DISPLAY 'DEMOING CI PART'.
 
        EPSCMORT-MAINLINE.
       * Call procedure to do SQL call
