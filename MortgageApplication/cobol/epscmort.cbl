@@ -72,7 +72,7 @@
 
        PROCEDURE DIVISION USING DFHCOMMAREA.
 
-           DISPLAY 'DEMOING CI PART'.
+           DISPLAY 'DEMOING CI PART1'.
 
        EPSCMORT-MAINLINE.
       * Call procedure to do SQL call
