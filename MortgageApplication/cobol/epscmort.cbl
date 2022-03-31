@@ -39,17 +39,17 @@
        01 W-RETIREMENT-WA                     PIC 9(4).
        01 W-COMAREA-LENGTH                    PIC 9(4) COMP.
 
-       01  SQL-ERROR-MSG.
-           03  FILLER              PIC X(11)      VALUE 'SQL ERROR: '.
-           03  SQL-ERROR-CODE      PIC 9(5) DISPLAY.
+      * 01  SQL-ERROR-MSG.
+      *     03  FILLER              PIC X(11)      VALUE 'SQL ERROR: '.
+      *     03  SQL-ERROR-CODE      PIC 9(5) DISPLAY.
       *
-           EXEC SQL
-               INCLUDE SQLCA
-           END-EXEC.
+      *     EXEC SQL
+      *         INCLUDE SQLCA
+      *     END-EXEC.
       *
-           EXEC SQL DECLARE SYSIBM.SYSDUMMY1 TABLE
-           ( IBMREQD                        CHAR(1) NOT NULL
-           ) END-EXEC.
+      *     EXEC SQL DECLARE SYSIBM.SYSDUMMY1 TABLE
+      *     ( IBMREQD                        CHAR(1) NOT NULL
+      *     ) END-EXEC.
       *
        01 IBMREQD                           PIC X(1).
       *
@@ -72,11 +72,9 @@
 
        PROCEDURE DIVISION USING DFHCOMMAREA.
 
-           DISPLAY 'DEMOING CI PART1'.
-
        EPSCMORT-MAINLINE.
       * Call procedure to do SQL call
-           PERFORM A805-DUMMY-SQL-CALL
+      *     PERFORM A805-DUMMY-SQL-CALL
            MOVE LENGTH OF DFHCOMMAREA to W-COMAREA-LENGTH.
            MOVE DFHCOMMAREA to W-COMMUNICATION-AREA.
            EVALUATE TRUE
@@ -234,19 +232,19 @@
                              OF W-COMMUNICATION-AREA
                              TO MSGERRO.
 
-       A805-DUMMY-SQL-CALL.
-           EXEC SQL
-               SELECT IBMREQD
-                    INTO :IBMREQD
-                    FROM SYSIBM.SYSDUMMY1
-           END-EXEC.
+      * A805-DUMMY-SQL-CALL.
+      *     EXEC SQL
+      *         SELECT IBMREQD
+      *              INTO :IBMREQD
+      *              FROM SYSIBM.SYSDUMMY1
+      *     END-EXEC.
       *
-           IF SQLCODE = 100
-               MOVE 'No rows found on SYSDUMM1.' TO MSGERRO
-           ELSE
-               IF SQLCODE NOT = 0
-                   MOVE SQLCODE TO SQL-ERROR-CODE
-                   MOVE SQL-ERROR-MSG TO MSGERRO
-               END-IF
-           END-IF.
+      *     IF SQLCODE = 100
+      *         MOVE 'No rows found on SYSDUMM1.' TO MSGERRO
+      *     ELSE
+      *         IF SQLCODE NOT = 0
+      *             MOVE SQLCODE TO SQL-ERROR-CODE
+      *             MOVE SQL-ERROR-MSG TO MSGERRO
+      *         END-IF
+      *     END-IF.
       *
