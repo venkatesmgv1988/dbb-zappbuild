@@ -55,14 +55,14 @@ sortedList.each { buildFile ->
         def isHogan = false
 
         // Check if the program has got static call to PEM
-        logicalFileList.logicalDependencies.each { logicalFile ->
-        println(logicalFile)
-        if (logicalFile.lname == "PEM" && logicalFile.category == "CALL"){
+        logicalFileList.logicalDependencies.each { file ->
+        println(file)
+        if (file.lname == "PEM" && file.category == "CALL"){
            isHogan = true
            }
         }
 
-        println (file + " is Hogan : " + isHogan)
+        println ('"' + buildFile + '"' + ' is Hogan : ' + isHogan)
 
 	// create mvs commands
 	LogicalFile logicalFile = dependencyResolver.getLogicalFile()
