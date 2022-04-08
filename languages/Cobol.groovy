@@ -55,6 +55,7 @@ sortedList.each { buildFile ->
         println(sourceDir)
         def logicalFileList = new DependencyScanner().scan(buildFile, sourceDir)
         def isHogan = false
+        println(logicalFileList)
 
         // Check if the program has got static call to PEM
         logicalFileList.logicalDependencies.each { logicalFile ->
