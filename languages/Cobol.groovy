@@ -51,14 +51,12 @@ sortedList.each { buildFile ->
         def sourceDir = props.workspace
 
         // Scan the program for the dependencies
-        println(buildFile)
-        println(sourceDir)
         def logicalFileList = new DependencyScanner().scan(buildFile, sourceDir)
         def isHogan = false
-        println(logicalFileList)
 
         // Check if the program has got static call to PEM
         logicalFileList.logicalDependencies.each { logicalFile ->
+        println(logicalFile)
         if (logicalFile.lname == "PEM" && logicalFile.category == "CALL"){
            isHogan = true
            }
