@@ -51,6 +51,8 @@ sortedList.each { buildFile ->
         def sourceDir = props.workspace
 
         // Scan the program for the dependencies
+        println(buildFile)
+        println(sourceDir)
         def logicalFileList = new DependencyScanner().scan(buildFile, sourceDir)
         def isHogan = false
 
