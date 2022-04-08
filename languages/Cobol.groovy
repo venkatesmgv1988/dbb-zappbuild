@@ -65,10 +65,11 @@ sortedList.each { buildFile ->
     // ************* Check for CALL PEM End Here *************
 
     if (isHogan) {
-
+    // Compile Hogan programs
         println ("Execute Hogan compile steps")
 
     } else {
+    // Compile Non-Hogan programs
         // create mvs commands
         LogicalFile logicalFile = dependencyResolver.getLogicalFile()
         String member = CopyToPDS.createMemberName(buildFile)
