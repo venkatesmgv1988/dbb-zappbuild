@@ -47,6 +47,22 @@ sortedList.each { buildFile ->
 	}else{
 		buildUtils.copySourceFiles(buildFile, props.cobol_srcPDS, 'cobol_dependenciesDatasetMapping', props.cobol_dependenciesAlternativeLibraryNameMapping, dependencyResolver)
 	}
+
+        def sourceDir = props.workspace
+
+        // Scan the program for the dependencies
+        def logicalFileList = new DependencyScanner().scan(buildFile, sourceDir)
+        def isHogan = false
+
+        // Check if the program has got static call to PEM
+        logicalFileList.logicalDependencies.each { logicalFile ->
+        if (logicalFile.lname == "PEM" && logicalFile.category == "CALL"){
+           isHogan = true
+           }
+        }
+
+        println (file + " is Hogan : " + isHogan)
+
 	// create mvs commands
 	LogicalFile logicalFile = dependencyResolver.getLogicalFile()
 	String member = CopyToPDS.createMemberName(buildFile)
