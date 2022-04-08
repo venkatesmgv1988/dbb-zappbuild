@@ -48,99 +48,106 @@ sortedList.each { buildFile ->
 		buildUtils.copySourceFiles(buildFile, props.cobol_srcPDS, 'cobol_dependenciesDatasetMapping', props.cobol_dependenciesAlternativeLibraryNameMapping, dependencyResolver)
 	}
 
-        def sourceDir = props.workspace
+    // ************* Check for CALL PEM Start Here *************
+    def sourceDir = props.workspace
 
-        // Scan the program for the dependencies
-        def logicalFileList = new DependencyScanner().scan(buildFile, sourceDir)
-        def isHogan = false
+    // Scan the program for the dependencies
+    def logicalFileList = new DependencyScanner().scan(buildFile, sourceDir)
+    def isHogan = false
 
-        // Check if the program has got static call to PEM
-        logicalFileList.logicalDependencies.each { file ->
-        println(file)
+    // Check if the program has got static call to PEM
+    logicalFileList.logicalDependencies.each { file ->
         if (file.lname == "PEM" && file.category == "CALL"){
            isHogan = true
-           }
+        }
+    }
+    println ('"' + buildFile + '"' + ' is Hogan : ' + isHogan)
+    // ************* Check for CALL PEM End Here *************
+
+    if (isHogan) {
+
+        println ("Execute Hogan compile steps")
+
+    } else {
+        // create mvs commands
+        LogicalFile logicalFile = dependencyResolver.getLogicalFile()
+        String member = CopyToPDS.createMemberName(buildFile)
+        File logFile = new File( props.userBuild ? "${props.buildOutDir}/${member}.log" : "${props.buildOutDir}/${member}.cobol.log")
+        if (logFile.exists())
+            logFile.delete()
+        MVSExec compile = createCompileCommand(buildFile, logicalFile, member, logFile)
+        MVSExec linkEdit = createLinkEditCommand(buildFile, logicalFile, member, logFile)
+
+        // execute mvs commands in a mvs job
+        MVSJob job = new MVSJob()
+        job.start()
+
+        // compile the cobol program
+        int rc = compile.execute()
+        int maxRC = props.getFileProperty('cobol_compileMaxRC', buildFile).toInteger()
+
+        boolean bindFlag = true
+
+        if (rc > maxRC) {
+            bindFlag = false
+            String errorMsg = "*! The compile return code ($rc) for $buildFile exceeded the maximum return code allowed ($maxRC)"
+            println(errorMsg)
+            props.error = "true"
+            buildUtils.updateBuildResult(errorMsg:errorMsg,logs:["${member}.log":logFile],client:getRepositoryClient())
+        }
+        else { // if this program needs to be link edited . . .
+
+            // Store db2 bind information as a generic property record in the BuildReport
+            String generateDb2BindInfoRecord = props.getFileProperty('generateDb2BindInfoRecord', buildFile)
+            if (buildUtils.isSQL(logicalFile) && generateDb2BindInfoRecord.toBoolean() ){
+                PropertiesRecord db2BindInfoRecord = buildUtils.generateDb2InfoRecord(buildFile)
+                BuildReportFactory.getBuildReport().addRecord(db2BindInfoRecord)
+            }
+
+            String needsLinking = props.getFileProperty('cobol_linkEdit', buildFile)
+            if (needsLinking.toBoolean()) {
+                rc = linkEdit.execute()
+                maxRC = props.getFileProperty('cobol_linkEditMaxRC', buildFile).toInteger()
+
+                if (rc > maxRC) {
+                    bindFlag = false
+                    String errorMsg = "*! The link edit return code ($rc) for $buildFile exceeded the maximum return code allowed ($maxRC)"
+                    println(errorMsg)
+                    props.error = "true"
+                    buildUtils.updateBuildResult(errorMsg:errorMsg,logs:["${member}.log":logFile],client:getRepositoryClient())
+                }
+                else {
+                    if(!props.userBuild && !isZUnitTestCase){
+                        // only scan the load module if load module scanning turned on for file
+                        String scanLoadModule = props.getFileProperty('cobol_scanLoadModule', buildFile)
+                        if (scanLoadModule && scanLoadModule.toBoolean() && getRepositoryClient())
+                            impactUtils.saveStaticLinkDependencies(buildFile, props.linkedit_loadPDS, logicalFile, repositoryClient)
+                    }
+                }
+            }
         }
 
-        println ('"' + buildFile + '"' + ' is Hogan : ' + isHogan)
+        //perform Db2 Bind only on User Build and perfromBindPackage property
+        if (props.userBuild && bindFlag && logicalFile.isSQL() && props.bind_performBindPackage && props.bind_performBindPackage.toBoolean() ) {
+            int bindMaxRC = props.getFileProperty('bind_maxRC', buildFile).toInteger()
 
-	// create mvs commands
-	LogicalFile logicalFile = dependencyResolver.getLogicalFile()
-	String member = CopyToPDS.createMemberName(buildFile)
-	File logFile = new File( props.userBuild ? "${props.buildOutDir}/${member}.log" : "${props.buildOutDir}/${member}.cobol.log")
-	if (logFile.exists())
-		logFile.delete()
-	MVSExec compile = createCompileCommand(buildFile, logicalFile, member, logFile)
-	MVSExec linkEdit = createLinkEditCommand(buildFile, logicalFile, member, logFile)
+            // if no  owner is set, use the user.name as package owner
+            def owner = ( !props.bind_packageOwner ) ? System.getProperty("user.name") : props.bind_packageOwner
 
-	// execute mvs commands in a mvs job
-	MVSJob job = new MVSJob()
-	job.start()
+            def (bindRc, bindLogFile) = bindUtils.bindPackage(buildFile, props.cobol_dbrmPDS, props.buildOutDir, props.bind_runIspfConfDir,
+                    props.bind_db2Location, props.bind_collectionID, owner, props.bind_qualifier, props.verbose && props.verbose.toBoolean());
+            if ( bindRc > bindMaxRC) {
+                String errorMsg = "*! The bind package return code ($bindRc) for $buildFile exceeded the maximum return code allowed ($props.bind_maxRC)"
+                println(errorMsg)
+                props.error = "true"
+                buildUtils.updateBuildResult(errorMsg:errorMsg,logs:["${member}_bind.log":bindLogFile],client:getRepositoryClient())
+            }
+        }
 
-	// compile the cobol program
-	int rc = compile.execute()
-	int maxRC = props.getFileProperty('cobol_compileMaxRC', buildFile).toInteger()
+        // clean up passed DD statements
+        job.stop()
+    }
 
-	boolean bindFlag = true
-
-	if (rc > maxRC) {
-		bindFlag = false
-		String errorMsg = "*! The compile return code ($rc) for $buildFile exceeded the maximum return code allowed ($maxRC)"
-		println(errorMsg)
-		props.error = "true"
-		buildUtils.updateBuildResult(errorMsg:errorMsg,logs:["${member}.log":logFile],client:getRepositoryClient())
-	}
-	else { // if this program needs to be link edited . . .
-		
-		// Store db2 bind information as a generic property record in the BuildReport
-		String generateDb2BindInfoRecord = props.getFileProperty('generateDb2BindInfoRecord', buildFile)
-		if (buildUtils.isSQL(logicalFile) && generateDb2BindInfoRecord.toBoolean() ){
-			PropertiesRecord db2BindInfoRecord = buildUtils.generateDb2InfoRecord(buildFile)
-			BuildReportFactory.getBuildReport().addRecord(db2BindInfoRecord)
-		}
-		
-		String needsLinking = props.getFileProperty('cobol_linkEdit', buildFile)
-		if (needsLinking.toBoolean()) {
-			rc = linkEdit.execute()
-			maxRC = props.getFileProperty('cobol_linkEditMaxRC', buildFile).toInteger()
-
-			if (rc > maxRC) {
-				bindFlag = false
-				String errorMsg = "*! The link edit return code ($rc) for $buildFile exceeded the maximum return code allowed ($maxRC)"
-				println(errorMsg)
-				props.error = "true"
-				buildUtils.updateBuildResult(errorMsg:errorMsg,logs:["${member}.log":logFile],client:getRepositoryClient())
-			}
-			else {
-				if(!props.userBuild && !isZUnitTestCase){
-					// only scan the load module if load module scanning turned on for file
-					String scanLoadModule = props.getFileProperty('cobol_scanLoadModule', buildFile)
-					if (scanLoadModule && scanLoadModule.toBoolean() && getRepositoryClient())
-						impactUtils.saveStaticLinkDependencies(buildFile, props.linkedit_loadPDS, logicalFile, repositoryClient)
-				}
-			}
-		}
-	}
-
-	//perform Db2 Bind only on User Build and perfromBindPackage property
-	if (props.userBuild && bindFlag && logicalFile.isSQL() && props.bind_performBindPackage && props.bind_performBindPackage.toBoolean() ) {
-		int bindMaxRC = props.getFileProperty('bind_maxRC', buildFile).toInteger()
-
-		// if no  owner is set, use the user.name as package owner
-		def owner = ( !props.bind_packageOwner ) ? System.getProperty("user.name") : props.bind_packageOwner
-
-		def (bindRc, bindLogFile) = bindUtils.bindPackage(buildFile, props.cobol_dbrmPDS, props.buildOutDir, props.bind_runIspfConfDir,
-				props.bind_db2Location, props.bind_collectionID, owner, props.bind_qualifier, props.verbose && props.verbose.toBoolean());
-		if ( bindRc > bindMaxRC) {
-			String errorMsg = "*! The bind package return code ($bindRc) for $buildFile exceeded the maximum return code allowed ($props.bind_maxRC)"
-			println(errorMsg)
-			props.error = "true"
-			buildUtils.updateBuildResult(errorMsg:errorMsg,logs:["${member}_bind.log":bindLogFile],client:getRepositoryClient())
-		}
-	}
-
-	// clean up passed DD statements
-	job.stop()
 }
 
 // end script
