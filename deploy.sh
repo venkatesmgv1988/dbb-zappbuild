@@ -14,7 +14,7 @@
 ###############################################################################################
 
 # Set the DBB bin directory
-DBB_HOME=
+DBB_HOME=/usr/lpp/IBM/dbb
 
 # $DBB_HOME/bin/groovyz automatically sets the env variables and classpath required for DBB
 CMD="$DBB_HOME/bin/groovyz deploy.groovy $@"
