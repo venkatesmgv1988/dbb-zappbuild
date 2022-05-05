@@ -17,6 +17,7 @@ import groovy.cli.commons.*
 @Field def gitUtils= loadScript(new File("utilities/GitUtilities.groovy"))
 @Field def buildUtils= loadScript(new File("utilities/BuildUtilities.groovy"))
 @Field def impactUtils= loadScript(new File("utilities/ImpactUtilities.groovy"))
+@Field def deployUtils= loadScript(new File("utilities/deploy.groovy"))
 @Field String hashPrefix = ':githash:'
 @Field String giturlPrefix = ':giturl:'
 @Field String gitchangedfilesPrefix = ':gitchangedfiles:'
@@ -31,7 +32,7 @@ println("\n** Build start at $props.startTime")
 initializeBuildProcess(args)
 
 // create build list and list of deletedFiles
-List<String> buildList = new ArrayList() 
+List<String> buildList = new ArrayList()
 List<String> deletedFiles = new ArrayList()
 
 (buildList, deletedFiles) = createBuildList()
@@ -413,11 +414,11 @@ def populateBuildProperties(String[] args) {
 	// Validate User Build Dependency file is used only with user build
 	if (props.userBuildDependencyFile) assert (props.userBuild) : "*! User Build Dependency File requires User Build option."
 
-	// Validate Build Properties  
+	// Validate Build Properties
 	if(props.reportExternalImpactsAnalysisDepths) assert (props.reportExternalImpactsAnalysisDepths == 'simple' || props.reportExternalImpactsAnalysisDepths == 'deep' ) : "*! Build Property props.reportExternalImpactsAnalysisDepths has an invalid value"
 	if(props.baselineRef) assert (props.impactBuild) : "*! Build Property props.baselineRef is exclusive to an impactBuild scenario"
 	
-	// Print all build properties + some envionment variables 
+	// Print all build properties + some envionment variables
 	if (props.verbose) {
 		println("java.version="+System.getProperty("java.runtime.version"))
 		println("java.home="+System.getProperty("java.home"))
@@ -498,7 +499,7 @@ def createBuildList() {
 	buildList.addAll(buildSet)
 	buildSet = null
 
-	// 
+	//
 	List<String> deleteList = new ArrayList<String>()
 	deleteList.addAll(deletedFiles)
 	
