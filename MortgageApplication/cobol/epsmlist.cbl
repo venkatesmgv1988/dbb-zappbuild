@@ -49,7 +49,7 @@
        01 SAVE-COMM-AREA.
           COPY EPSMTCOM.
 
-       01  END-OF-TRANS-MSG                 PIC X(30)
+       01  END-OF-TRANS-MSG                 PIC X(50)
              VALUE 'END OF TRANSACTION - THANK YOU VERY MUCH'.
            COPY DFHAID.
       *    COPY DFHEIBLK.
