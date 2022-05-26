@@ -75,7 +75,7 @@
        EPSCMORT-MAINLINE.
       * Call procedure to do SQL call
       *     PERFORM A805-DUMMY-SQL-CALL
-           DISPLAY 'Hello World'.
+           DISPLAY 'CI CD Testing'.
            MOVE LENGTH OF DFHCOMMAREA to W-COMAREA-LENGTH.
            MOVE DFHCOMMAREA to W-COMMUNICATION-AREA.
            EVALUATE TRUE
