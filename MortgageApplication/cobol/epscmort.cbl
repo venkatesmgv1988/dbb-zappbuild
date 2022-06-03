@@ -50,7 +50,7 @@
       *     EXEC SQL DECLARE SYSIBM.SYSDUMMY1 TABLE
       *     ( IBMREQD                        CHAR(1) NOT NULL
       *     ) END-EXEC.
-      *
+      **
        01 IBMREQD                           PIC X(1).
       *
        01  END-OF-TRANS-MSG                 PIC X(30)
