@@ -224,10 +224,11 @@ if(rc==0){
 println("** buztool output properties")
 def outputProp = new Properties()
 new File("${properties.workDir}/buztool.output").withInputStream { outputProp.load(it) }
+
 outputProp.each{k,v->
 println "	$k -> $v"
 
-
+}
 }else{
 println("*! Error executing buztool\n" +error.toString())
 System.exit(rc)
@@ -268,11 +269,14 @@ System.exit(0)
 
 def properties = new Properties()
 
-// load workDir from ./build.properties if it exists def buildProperties = new Properties()
-def scriptDir = new File(getClass().protectionDomain.codeSource.location.path).parent def buildPropFile = new File("$scriptDir/build.properties")
+// load workDir from ./build.properties if it exists
+def buildProperties = new Properties()
+def scriptDir = new File(getClass().protectionDomain.codeSource.location.path).parent
+def buildPropFile = new File("$scriptDir/build.properties")
 if (buildPropFile.exists()){
-buildPropFile.withInputStream { buildProperties.load(it) } if (buildProperties.workDir != null)
-properties.workDir = buildProperties.workDir
+        buildPropFile.withInputStream { buildProperties.load(it) }
+        if (buildProperties.workDir != null)
+        properties.workDir = buildProperties.workDir
 }
 
 // set command line arguments
