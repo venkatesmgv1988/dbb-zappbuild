@@ -14,4 +14,4 @@ echo "**                         DBB Artifact Path:" $artifacts
 
 buzTool=/u/ucd/v7.0.4/bin/buztool.sh
 
-groovyz $3/deploy.groovy -b $buzTool -w $artifacts -c $ucd_Component_Name -v $ucd_version
+groovyz $3/deploy.groovy -b $buzTool -c $ucd_Component_Name -v $ucd_version -w $artifacts
